@@ -1,0 +1,561 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Attribute Maintenance")
+gui.Form1..size(6645,6240)
+gui.Form1..minx(0)
+gui.Form1..miny(0)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(True)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.cmdUpdate.create(button)
+gui.Form1.cmdUpdate.caption("Update")
+gui.Form1.cmdUpdate.visible(True)
+gui.Form1.cmdUpdate.size(855,375)
+gui.Form1.cmdUpdate.zorder(0)
+gui.Form1.cmdUpdate.position(200,5100)
+gui.Form1.cmdUpdate.enabled(True)
+gui.Form1.cmdUpdate.fontname("Arial")
+gui.Form1.cmdUpdate.fontsize(8)
+gui.Form1.cmdUpdate.event(click,cmdupdate_click)
+gui.Form1.cmdUpdate.defaultvalue("")
+gui.Form1.cmdUpdate.controlgroup(0)
+gui.Form1.cmdAdd.create(button)
+gui.Form1.cmdAdd.caption("Add")
+gui.Form1.cmdAdd.visible(True)
+gui.Form1.cmdAdd.size(855,375)
+gui.Form1.cmdAdd.zorder(0)
+gui.Form1.cmdAdd.position(200,1725)
+gui.Form1.cmdAdd.enabled(True)
+gui.Form1.cmdAdd.fontname("Arial")
+gui.Form1.cmdAdd.fontsize(8)
+gui.Form1.cmdAdd.event(click,cmdadd_click)
+gui.Form1.cmdAdd.defaultvalue("")
+gui.Form1.cmdAdd.controlgroup(0)
+gui.Form1.cmdRemove.create(button)
+gui.Form1.cmdRemove.caption("Remove")
+gui.Form1.cmdRemove.visible(True)
+gui.Form1.cmdRemove.size(855,375)
+gui.Form1.cmdRemove.zorder(0)
+gui.Form1.cmdRemove.position(1415,1725)
+gui.Form1.cmdRemove.enabled(True)
+gui.Form1.cmdRemove.fontname("Arial")
+gui.Form1.cmdRemove.fontsize(8)
+gui.Form1.cmdRemove.event(click,cmdremove_click)
+gui.Form1.cmdRemove.defaultvalue("")
+gui.Form1.cmdRemove.controlgroup(0)
+gui.Form1.txtBudgetaccount.create(textbox,"",True,2040,300,0,200,480,True,0,Arial,8,-2147483643,1)
+gui.Form1.txtBudgetaccount.defaultvalue("")
+gui.Form1.txtBudgetaccount.controlgroup(0)
+gui.Form1.lblbudgetaccount.create(label,"Budget Account",True,1935,255,1,200,185,True,0,Arial,8,-2147483633,0)
+gui.Form1.lblbudgetaccount.defaultvalue("")
+gui.Form1.lblbudgetaccount.controlgroup(0)
+gui.Form1.lblAttribute.create(label,"New Attribute",True,1920,255,1,200,925,True,0,Arial,8,-2147483633,0)
+gui.Form1.lblAttribute.defaultvalue("")
+gui.Form1.lblAttribute.controlgroup(0)
+gui.Form1.txtattribute.create(textbox,"",True,2040,300,0,200,1225,True,0,Arial,8,-2147483643,1)
+gui.Form1.txtattribute.defaultvalue("")
+gui.Form1.txtattribute.controlgroup(0)
+gui.Form1.ddlAttributes.create(dropdownlist)
+gui.Form1.ddlAttributes.visible(True)
+gui.Form1.ddlAttributes.size(2935,330)
+gui.Form1.ddlAttributes.zorder(0)
+gui.Form1.ddlAttributes.position(2640,480)
+gui.Form1.ddlAttributes.enabled(True)
+gui.Form1.ddlAttributes.fontname("Arial")
+gui.Form1.ddlAttributes.fontsize(8)
+gui.Form1.ddlAttributes.event(change,ddlattributes_change)
+gui.Form1.ddlAttributes.event(click,ddlattributes_click)
+gui.Form1.ddlAttributes.defaultvalue("")
+gui.Form1.ddlAttributes.controlgroup(0)
+gui.Form1.lblattributedropdown.create(label,"Attributes for Accounts",True,1935,255,1,2635,185,True,0,Arial,8,-2147483633,0)
+gui.Form1.lblattributedropdown.defaultvalue("")
+gui.Form1.lblattributedropdown.controlgroup(0)
+gui.Form1.gsflexgrid1.create(gsflexgrid)
+gui.Form1.gsflexgrid1.FixedRows(0)
+gui.Form1.gsflexgrid1.FixedCols(0)
+gui.Form1.gsflexgrid1.visible(True)
+gui.Form1.gsflexgrid1.size(6015,2760)
+gui.Form1.gsflexgrid1.zorder(0)
+gui.Form1.gsflexgrid1.position(200,2300)
+gui.Form1.gsflexgrid1.enabled(True)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Variable.UDT.uRemove.Define("ACCOUNT_NUM",String,ACCOUNT_NUM)
+Variable.UDT.uRemove.Define("ATTR",String)
+Variable.uGlobal.uRemove.Declare("uRemove")
+Variable.UDT.uDelete.Define("ACCOUNT_NUM",String,ACCOUNT_NUM)
+Variable.UDT.uDelete.Define("ATTR",String,ATTR)
+Variable.UDT.uDelete.Define("TYPE",String,TYPE)
+Variable.uGlobal.uDelete.Declare("uDelete")
+Variable.Global.iddlcount.Declare(Long,0)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'Maintenance program for Hawthorne Hydroponics attributes
+'Coded by: WAW
+'Date 10/8/15
+
+'open connection
+F.odbc.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+'add items to the drop down list	
+Gui.Form1.ddlAttributes.AddItem("6010.00.00 through 6010.99.00")
+Gui.Form1.ddlAttributes.AddItem("6700.00.00 through 6700.00.99")
+
+F.Intrinsic.Control.CallSub(Buildstyle)
+
+Gui.Form1..Visible(true)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+Function.Intrinsic.String.Concat("Project: GCG_Custom_Attr_6550.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+program.sub.form1_unload.start
+F.Intrinsic.Control.SetErrorHandler("form1_unload_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'make the form invisible	
+Gui.Form1..Visible(false)
+
+'close connection to the database
+F.ODBC.Connection!con.Close
+
+'end the program
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("form1_unload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.form1_unload.end
+
+program.sub.cmdupdate_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdupdate_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.ssql.Declare(String)
+V.Local.saccount.Declare(String)
+V.Local.irows.Declare(Long)
+V.Local.icount.Declare(Long)
+V.Local.sreturn.Declare(String)
+V.Local.ssql2.Declare(String)
+V.Local.iremovecount.Declare(Long)
+V.Local.ideletecount.Declare(Long)
+
+F.Intrinsic.Control.For(V.Local.ideletecount,V.uGlobal.uDelete.LBound,V.uGlobal.uDelete.UBound,1)
+	F.Intrinsic.String.Build("delete  from GCG_3518_Attr_Maint where ACCOUNT_NUM ='{0}' and ATTR_6010 = '{1}' or ATTR_6700 = '{1}'",V.uGlobal.uDelete(v.Local.ideletecount)!ACCOUNT_NUM,V.uglobal.udelete(v.local.ideletecount)!ATTR,V.Local.ssql)
+	F.ODBC.connection!con.OpenLocalRecordsetRW("rst",V.Local.ssql)
+	F.ODBC.con!rst.Close
+F.Intrinsic.control.Next(V.Local.ideletecount)
+
+F.Intrinsic.Control.If(V.Screen.Form1!ddlAttributes.Text,=,"6010.00.00 through 6010.99.00")
+
+	'get the number of rows
+	V.Local.irows.Set(V.Screen.Form1!gsflexgrid1.Rows)
+	'subtract 2 from the count for the header and blank row on the bottom
+	F.Intrinsic.Math.Sub(V.Local.irows,2,V.Local.irows)
+	F.Intrinsic.Control.For(V.local.icount,1,V.Local.irows,1)
+		Gui.Form1.gsflexgrid1.ReadRow(V.Local.icount,V.Local.sreturn)
+		F.Intrinsic.String.Split(V.Local.sreturn,"*!*",V.Local.sreturn)
+		F.Intrinsic.String.Build("SELECT ACCOUNT_NUM, ATTR_6010 from GCG_3518_Attr_Maint where ATTR_6010 = '{0}'",V.Local.sreturn(0),V.Local.ssql)
+	
+		F.ODBC.Connection!con.OpenLocalRecordsetRW("rst",V.Local.ssql)
+		F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+			'check to see if there is already an attribute like that in the table, if so just update the account number
+			F.Intrinsic.String.Build("update GCG_3518_Attr_Maint set ACCOUNT_NUM = '{0}' where ATTR_6010 = '{1}'",V.Local.sreturn(1),V.Local.sreturn(0),V.Local.ssql2)
+			F.ODBC.Connection!con.OpenRecordsetRW("rstUpdate",V.Local.ssql2)
+			F.ODBC.con!rstUpdate.Close
+		F.Intrinsic.Control.Else
+		'otherwise add a new record to the recordset
+			F.ODBC.con!rst.AddNew
+			F.ODBC.con!rst.Set!ACCOUNT_NUM(V.Local.sreturn(1))
+			F.ODBC.con!rst.Set!ATTR_6010(V.Local.sreturn(0))
+			F.ODBC.con!rst.Update
+		F.Intrinsic.Control.EndIf
+'		F.ODBC.con!rstUpdate.Close
+		F.ODBC.con!rst.Close
+	
+	F.Intrinsic.Control.Next(V.Local.icount)
+
+F.Intrinsic.Control.ElseIf(V.Screen.Form1!ddlAttributes.Text,=,"6700.00.00 through 6700.00.99")
+
+	'get the number of rows
+	V.Local.irows.Set(V.Screen.Form1!gsflexgrid1.Rows)
+	'subtract 2 from the count for the header and blank row on the bottom
+	F.Intrinsic.Math.Sub(V.Local.irows,2,V.Local.irows)
+	
+	F.Intrinsic.Control.For(V.local.icount,1,V.Local.irows,1)
+
+		Gui.Form1.gsflexgrid1.ReadRow(V.Local.icount,V.Local.sreturn)
+
+		F.Intrinsic.String.Split(V.Local.sreturn,"*!*",V.Local.sreturn)
+		
+		F.Intrinsic.String.Build("SELECT ACCOUNT_NUM, ATTR_6700 from GCG_3518_Attr_Maint where ATTR_6700 = '{0}'",V.Local.sreturn(0),V.Local.ssql)
+	
+		F.ODBC.Connection!con.OpenLocalRecordsetRW("rst",V.Local.ssql)
+		F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+			'check to see if there is already an attribute like that in the table, if so just update the account number
+			F.Intrinsic.String.Build("update GCG_3518_Attr_Maint set ACCOUNT_NUM = '{0}' where ATTR_6700 = '{1}'",V.Local.sreturn(1),V.Local.sreturn(0),V.Local.ssql2)
+			F.ODBC.Connection!con.OpenRecordsetRW("rstUpdate",V.Local.ssql2)
+			F.ODBC.con!rstUpdate.Close
+		F.Intrinsic.Control.Else
+		'otherwise add a new record to the recordset
+			F.ODBC.con!rst.AddNew
+			F.ODBC.con!rst.Set!ACCOUNT_NUM(V.Local.sreturn(1))
+			F.ODBC.con!rst.Set!ATTR_6700(V.Local.sreturn(0))
+			F.ODBC.con!rst.Update
+		F.Intrinsic.Control.EndIf
+'		F.ODBC.con!rstUpdate.Close
+		F.ODBC.con!rst.Close
+	F.Intrinsic.Control.Next(V.Local.icount)
+F.Intrinsic.Control.ElseIf(V.Screen.Form1!ddlAttributes.Text,=,"")
+	F.Intrinsic.UI.Msgbox("Please select an attribute range")
+	F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.EndIf
+
+V.global.iddlcount.Set(0)
+
+F.Intrinsic.UI.Msgbox("Update Complete")
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdupdate_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdupdate_click.end
+
+program.sub.cmdadd_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdadd_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.irow.Declare(Long)
+
+Gui.Form1.gsflexgrid1.Visible(false)
+
+'variable to hold the number of rows in the flexgrid
+V.Local.irow.Set(V.Screen.Form1!gsflexgrid1.Rows)
+
+'subtract 1 from the rows
+F.Intrinsic.Math.sub(V.Local.irow,1,V.Local.irow)
+
+'check to see if the attribute textbox is empty
+F.Intrinsic.Control.If(V.screen.Form1!txtattribute.Text,=,"")
+	F.Intrinsic.UI.Msgbox("Please enter an attribute.")
+	F.Intrinsic.Control.CallSub(Ddlattributes_click)
+	Gui.Form1.gsflexgrid1.Visible(true)
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Else
+	'place the newly entered attribute on the flexgrid
+	Gui.Form1.gsflexgrid1.TextMatrix(0,V.Local.irow,V.Screen.Form1!txtattribute.Text)
+	'check to see if the budget textbox is empty
+	F.Intrinsic.Control.if(V.Screen.Form1!txtBudgetaccount.Text,<>,"")
+		Gui.Form1.gsflexgrid1.TextMatrix(1,V.Local.irow,V.Screen.Form1!txtBudgetaccount.Text)
+	F.Intrinsic.Control.EndIf
+	'apply the style to the row
+	Gui.Form1.gsflexgrid1.ApplyStyle(V.Local.irow,2)
+	'add 2 to the number of rows in the flexgrid
+	F.Intrinsic.Math.Add(V.Local.irow,2,V.Local.irow)
+	'update the flexgrid
+	Gui.Form1.gsflexgrid1.Rows(V.Local.irow)
+
+F.Intrinsic.Control.EndIf
+
+Gui.Form1.txtattribute.Text("")
+Gui.Form1.txtBudgetaccount.Text("")
+
+Gui.Form1.gsflexgrid1.Visible(true)
+
+'F.Intrinsic.Control.CallSub(Buildstyle)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdadd_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.callsub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdadd_click.end
+
+program.sub.cmdremove_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdremove_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.scheck.Declare(String)
+V.Local.irow.Declare(Long)
+V.Local.icount.Declare(Long)
+V.Local.sret.Declare(String)
+V.Local.saccount.Declare(String)
+V.Local.sattr.Declare(String)
+V.Local.iudtcounter.Declare(Long)
+V.Local.sretcombined.Declare(String)
+
+Gui.Form1.gsflexgrid1.Visible(false)
+
+'set the variable with the number of rows in the flexgrid
+V.Local.irow.Set(V.Screen.Form1!gsflexgrid1.Rows)
+
+'subtract the header and bottom blank row from the count
+F.Intrinsic.Math.Sub(V.Local.irow,1,V.Local.irow)
+
+V.Local.iudtcounter.Set(1)
+
+V.uGlobal.uRemove.Redim(1,1)
+
+'loop through the flexgrid
+F.intrinsic.control.for(V.Local.icount,V.Local.irow,1,-1)
+	'save the value of the checkbox to the variable
+	Gui.Form1.gsflexgrid1.GetTextMatrix(2,V.Local.icount,V.Local.scheck)
+	'check to see if the box is checked or not (1 yes, 0 no)
+	F.Intrinsic.Control.If(V.Local.scheck,=,1)
+
+'		F.Intrinsic.Control.If(v.Screen.Form1!ddlAttributes.Text,=,"6010.00.00 through 6010.99.00")
+			Gui.Form1.gsflexgrid1.ReadRow(V.Local.icount,V.Local.sret)
+			F.Intrinsic.String.Split(V.Local.sret,"*!*",V.Local.sret)
+			V.uGlobal.uRemove(v.Local.iudtcounter)!ACCOUNT_NUM.Set(V.Local.sret(1))
+			V.uGlobal.uRemove(v.Local.iudtcounter)!ATTR.Set(V.Local.sret(0))
+			F.Intrinsic.String.Build("{0}*!*{1}",V.Local.sret(1),V.Local.sret(0),V.Local.sretcombined)
+
+			F.Intrinsic.Control.If(V.Screen.Form1!ddlAttributes.Text,=,"6010.00.00 through 6010.99.00")
+				F.Intrinsic.String.Build("{0}*!*{1}",V.Local.sretcombined,"ATTR_6010",V.Local.sretcombined)
+			F.Intrinsic.Control.ElseIf(V.screen.form1!ddlAttributes.text,=,"6700.00.00 through 6700.00.99")
+				F.Intrinsic.String.Build("{0}*!*{1}",V.Local.sretcombined,"ATTR_6700",V.Local.sretcombined)
+			F.Intrinsic.Control.EndIf
+
+	'		f.intrinsic.string.build("DELETE  from 		
+			F.Intrinsic.Variable.LoadUDTFromString(V.uGlobal.uDelete,"ACCOUNT_NUM*!*ATTR*!*TYPE",V.Local.sretcombined,"!@!","*!*",True,1000)
+			F.Intrinsic.Math.Add(V.Local.iudtcounter,1,V.Local.iudtcounter)
+			V.uglobal.uRemove.Redimpreserve(1,V.Local.iudtcounter)
+			Gui.Form1.gsflexgrid1.RemoveStyle(V.Local.icount)
+			Gui.Form1.gsflexgrid1.deleterow(V.Local.icount)
+''		F.Intrinsic.Math.Sub(V.Local.icount,1,V.Local.icount)
+'		F.Intrinsic.Control.EndIf
+	F.Intrinsic.control.endif
+
+F.Intrinsic.control.next(V.local.icount)
+	
+Gui.Form1.gsflexgrid1.Visible(true)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdremove_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdremove_click.end
+
+program.sub.ddlattributes_click.start
+F.Intrinsic.Control.SetErrorHandler("ddlattributes_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.ssql.Declare(String)
+V.Local.irow.Declare(Long)
+V.Local.irows.Declare(Long)
+V.Local.icount.Declare(Long)
+V.Local.icheck.Declare(Long)
+V.Local.sret.Declare(String)
+
+
+
+F.Intrinsic.Math.sub(V.Local.irow,1,V.Local.irow)
+V.Local.icheck.Set(V.Screen.Form1!gsflexgrid1.Rows)
+F.Intrinsic.Math.sub(V.Local.icheck,1,V.Local.icheck)
+F.intrinsic.Control.If(V.Global.iddlcount,<>,0)
+	F.Intrinsic.Control.If(V.Local.icheck,<>,V.Global.iddlcount)
+		F.Intrinsic.UI.Msgbox("Changes made have not been saved yet","Warning",1,V.Local.sret)
+		F.Intrinsic.Control.If(V.Local.sret,=,1)
+
+		F.Intrinsic.Control.ElseIf(V.Local.sret,=,2)
+			F.Intrinsic.Control.ExitSub
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+Gui.Form1.gsflexgrid1.Rows(2)
+'
+''subtract 1 from the rows
+'F.Intrinsic.Math.sub(V.Local.irow,1,V.Local.irow)
+F.Intrinsic.Control.If(V.Screen.Form1!ddlAttributes.Text,=,"6010.00.00 through 6010.99.00")
+	V.Local.irow.Set(1)
+	F.Intrinsic.String.Build(" select ATTR_6010, ACCOUNT_NUM from GCG_3518_Attr_Maint where ATTR_6010 <> '{0}'","",V.Local.ssql)
+	F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.ssql)
+	F.Intrinsic.Control.DoUntil(V.ODBC.con!rst.EOF,=,True)
+		'variable to hold the number of rows in the flexgrid
+		V.Local.irow.Set(V.Screen.Form1!gsflexgrid1.Rows)
+		'subtract 1 from the rows
+		F.Intrinsic.Math.sub(V.Local.irow,1,V.Local.irow)
+		V.Global.iddlcount.Set(V.Local.irow)
+		'place the newly entered attribute on the flexgrid
+		Gui.Form1.gsflexgrid1.TextMatrix(0,V.Local.irow,V.odbc.con!rst.fieldvaltrim!ATTR_6010)
+		Gui.Form1.gsflexgrid1.TextMatrix(1,V.Local.irow,V.ODBC.con!rst.FieldValTrim!ACCOUNT_NUM)
+		'apply the style to the row
+		Gui.Form1.gsflexgrid1.ApplyStyle(V.Local.irow,2)
+		'add 2 to the number of rows in the flexgrid
+		F.Intrinsic.Math.Add(V.Local.irow,2,V.Local.irow)
+		'update the flexgrid
+		Gui.Form1.gsflexgrid1.Rows(V.Local.irow)
+		F.ODBC.con!rst.MoveNext
+		F.Intrinsic.control.Loop
+	F.ODBC.con!rst.Close
+F.Intrinsic.Control.ElseIf(V.Screen.Form1!ddlAttributes.Text,=,"6700.00.00 through 6700.00.99")
+	V.Local.irow.Set(1)
+	F.Intrinsic.String.Build(" select ATTR_6700, ACCOUNT_NUM from GCG_3518_Attr_Maint where ATTR_6700 <> '{0}'","",V.Local.ssql)
+	F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.ssql)
+	F.Intrinsic.Control.DoUntil(V.ODBC.con!rst.EOF,=,True)
+		'variable to hold the number of rows in the flexgrid
+		V.Local.irow.Set(V.Screen.Form1!gsflexgrid1.Rows)
+'		F.Intrinsic.Control.If(V.Local.irow,>,1)
+'			V.Local.irow.Set(1)
+'		F.Intrinsic.Control.EndIf
+		'subtract 1 from the rows
+		F.Intrinsic.Math.sub(V.Local.irow,1,V.Local.irow)
+		V.Global.iddlcount.Set(V.Local.irow)
+		'place the newly entered attribute on the flexgrid
+		Gui.Form1.gsflexgrid1.TextMatrix(0,V.Local.irow,V.odbc.con!rst.fieldvaltrim!ATTR_6700)
+		Gui.Form1.gsflexgrid1.TextMatrix(1,V.Local.irow,V.ODBC.con!rst.FieldValTrim!ACCOUNT_NUM)
+		'apply the style to the row
+		Gui.Form1.gsflexgrid1.ApplyStyle(V.Local.irow,2)
+		'add 2 to the number of rows in the flexgrid
+		F.Intrinsic.Math.Add(V.Local.irow,2,V.Local.irow)
+		'update the flexgrid
+		Gui.Form1.gsflexgrid1.Rows(V.Local.irow)
+		F.ODBC.con!rst.MoveNext
+		F.Intrinsic.control.Loop
+	F.ODBC.con!rst.Close
+
+
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("ddlattributes_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.ddlattributes_click.end
+
+Program.Sub.Buildstyle.Start
+F.Intrinsic.Control.SetErrorHandler("Buildstyle_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.scolpercent.Declare(String)
+
+'make the flexgrid invisible	
+Gui.Form1.gsflexgrid1.Visible(False)
+
+'set the column and row dimensions in the flexgrid
+Gui.Form1.gsflexgrid1.Cols(3)
+Gui.Form1.gsflexgrid1.Rows(2)
+'Gui.Form1.gsflexgrid1.FixedRows(1)
+'Gui.Form1.gsflexgrid1.FixedCols(2)
+'Gui.Form1.gsflexgrid1.ColWidth(0,2000)
+'Gui.Form1.gsflexgrid1.ColWidth(1,2000)
+'Gui.Form1.gsflexgrid1.Colwidth(2,2000)
+V.Local.scolpercent.Set(".33:.33:.32")
+Gui.Form1.gsflexgrid1.SetColumnPercentages(V.Local.scolpercent)
+
+'attribute column
+Gui.Form1.gsflexgrid1.TextMatrix(0,0,"Attribute")
+Gui.Form1.gsflexgrid1.BuildStyle(1,0,"Type","Locked",True)
+Gui.Form1.gsflexgrid1.BuildStyle(1,0,"Fontstyle","Bold",True)
+Gui.Form1.gsflexgrid1.BuildStyle(1,0,"Format","Alignment",4)
+
+'budget account
+Gui.Form1.gsflexgrid1.TextMatrix(1,0,"Budget Account")
+Gui.Form1.gsflexgrid1.BuildStyle(1,1,"Fontstyle","Bold",True)
+Gui.Form1.gsflexgrid1.BuildStyle(1,1,"Format","Alignment",4)
+Gui.Form1.gsflexgrid1.BuildStyle(1,1,"Type","Locked",True)
+
+'checkbox to remove
+Gui.Form1.gsflexgrid1.TextMatrix(2,0,"Remove")
+Gui.Form1.gsflexgrid1.BuildStyle(1,2,"Type","Locked",True)
+Gui.Form1.gsflexgrid1.BuildStyle(1,2,"Fontstyle","Bold",True)
+Gui.Form1.gsflexgrid1.BuildStyle(1,2,"Format","Alignment",4)
+'Gui.Form1.gsflexgrid1.BuildStyle(2,2,"Type","Checkbox",True)
+
+Gui.Form1.gsflexgrid1.BuildStyle(2,2,"Type","Checkbox",True)
+Gui.Form1.gsflexgrid1.BuildStyle(2,2,"Format","Alignment",4)
+Gui.Form1.gsflexgrid1.BuildStyle(2,1,"Type","Locked",True)
+Gui.Form1.gsflexgrid1.BuildStyle(2,0,"Type","Locked",True)
+'apply the styles
+Gui.Form1.gsflexgrid1.ApplyStyle(0,1)
+'Gui.Form1.gsflexgrid1.ApplyStyle(1,1)
+Gui.Form1.gsflexgrid1.ApplyStyle(1,2)
+
+'make the flexgrid invisible	
+Gui.Form1.gsflexgrid1.Visible(True)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Buildstyle_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Buildstyle.End
+
+Program.Sub.Comments.Start
+${$0$}$GCG_Custom_Attr_6550$}$WAW$}$10/8/2015
+Program.Sub.Comments.End
+
