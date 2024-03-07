@@ -1,0 +1,551 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Attributes")
+gui.Form1..size(3330,3090)
+gui.Form1..minx(0)
+gui.Form1..miny(0)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(True)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.dropdownlist1.create(dropdownlist)
+gui.Form1.dropdownlist1.visible(True)
+gui.Form1.dropdownlist1.size(2715,330)
+gui.Form1.dropdownlist1.zorder(0)
+gui.Form1.dropdownlist1.position(200,515)
+gui.Form1.dropdownlist1.enabled(True)
+gui.Form1.dropdownlist1.fontname("Arial")
+gui.Form1.dropdownlist1.fontsize(8)
+gui.Form1.dropdownlist1.defaultvalue("")
+gui.Form1.dropdownlist1.controlgroup(0)
+gui.Form1.cmdSelect.create(button)
+gui.Form1.cmdSelect.caption("Select")
+gui.Form1.cmdSelect.visible(True)
+gui.Form1.cmdSelect.size(855,375)
+gui.Form1.cmdSelect.zorder(0)
+gui.Form1.cmdSelect.position(200,1915)
+gui.Form1.cmdSelect.enabled(True)
+gui.Form1.cmdSelect.fontname("Arial")
+gui.Form1.cmdSelect.fontsize(8)
+gui.Form1.cmdSelect.event(click,cmdselect_click)
+gui.Form1.cmdSelect.defaultvalue("")
+gui.Form1.cmdSelect.controlgroup(0)
+gui.Form1.lblAttributes.create(label,"Select an Attribute",True,1935,255,1,200,200,True,0,Arial,8,-2147483633,0)
+gui.Form1.lblAttributes.defaultvalue("")
+gui.Form1.lblAttributes.controlgroup(0)
+gui.Form1.lblBudgetAccount.create(label,"Budget Account",True,1935,255,1,200,1000,True,0,Arial,8,-2147483633,0)
+gui.Form1.lblBudgetAccount.defaultvalue("")
+gui.Form1.lblBudgetAccount.controlgroup(0)
+gui.Form1.txtbudgetaccount.create(textbox,"",True,1830,300,0,200,1300,True,0,Arial,8,-2147483643,1)
+gui.Form1.txtbudgetaccount.defaultvalue("")
+gui.Form1.txtbudgetaccount.controlgroup(0)
+gui.Form1.cmdCancel.create(button)
+gui.Form1.cmdCancel.caption("Cancel")
+gui.Form1.cmdCancel.visible(True)
+gui.Form1.cmdCancel.size(855,375)
+gui.Form1.cmdCancel.zorder(0)
+gui.Form1.cmdCancel.position(1400,1900)
+gui.Form1.cmdCancel.enabled(True)
+gui.Form1.cmdCancel.fontname("Arial")
+gui.Form1.cmdCancel.fontsize(8)
+gui.Form1.cmdCancel.event(click,cmdcancel_click)
+gui.Form1.cmdCancel.defaultvalue("")
+gui.Form1.cmdCancel.controlgroup(0)
+
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Variable.Global.Attribute.Declare(String)
+Variable.Global.Open.Declare(Long,0)
+Program.Sub.Preflight.End
+
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.retval.Declare(Long)
+V.Local.sfile.Declare(String)
+
+'custom program to allow attributes to be added for batches
+'Coded by: WAW
+'Date 10/8/15
+
+'open connection
+F.odbc.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+V.Local.ssql.Declare(String)
+V.Local.sinvoice.Declare(String)
+V.Local.sglaccount.Declare(String)
+V.Local.i.Declare(Long)
+V.Local.sddlvalue.Declare(String)
+V.Local.ssql2.Declare(String)
+V.Local.sattribute.Declare(String)
+V.Local.sbatch.Declare(String)
+V.Local.svendor.Declare(String)
+V.Local.svendorname.Declare(String)
+V.Local.saccountnumber.Declare(String)
+V.Local.stransdate.Declare(String)
+V.Local.sbatchline.Declare(String)
+V.Local.ssql3.Declare(String)
+
+F.Intrinsic.Control.If(V.Caller.Hook,=,35110)
+	'set the invoice and gl account as local variables
+	V.Local.sinvoice.Set(V.Passed.000018)
+	V.Local.sglaccount.Set(V.Passed.000014)
+	'if the gl account number is between 6010.00.00 and 6010.99.00 load the form with the proper attributes in the dropdown list
+	F.Intrinsic.Control.If(V.local.sglaccount,>=,6010.00.00)
+	F.Intrinsic.Control.AndIf(V.Local.sglaccount,<=,6010.99.00)
+		'set the global attribute to 6010
+'		V.Global.Attribute.Set(6010)
+		F.Intrinsic.String.Build("select distinct ATTR_6010 from GCG_ATTR_MAINT_6550 where ATTR_6010 <> '{0}'","",V.Local.ssql)
+		F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.ssql)
+		F.Intrinsic.Control.DoUntil(V.ODBC.con!rst.EOF,=,True)
+			'set as a local variable and load the dropdown list
+			V.Local.sddlvalue.Set(V.ODBC.con!rst.FieldValTrim!ATTR_6010)
+			Gui.Form1.dropdownlist1.AddItem(V.Local.sddlvalue)
+		F.ODBC.con!rst.MoveNext
+		F.Intrinsic.control.Loop
+		'make the form visible
+		Gui.Form1..visible(true)
+	F.Intrinsic.Control.EndIf
+	'if the gl account number is between 6700.00.00 and 6700.99.00 load the form with the proper attributes in the dropdown list
+	F.Intrinsic.Control.If(V.Local.sglaccount,>=,6700.00.00)
+	F.Intrinsic.Control.AndIf(V.Local.sglaccount,<=,6700.00.99)
+		'set the global attribute to 6700
+'		V.Global.Attribute.Set(6700)
+		F.Intrinsic.String.Build("select distinct ATTR_6700 from GCG_ATTR_MAINT_6550 where ATTR_6700 <> '{0}'","",V.Local.ssql)
+		F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.ssql)
+		F.Intrinsic.Control.DoUntil(V.ODBC.con!rst.EOF,=,True)
+			'set as a local variable and load the dropdown list
+			V.Local.sddlvalue.Set(V.ODBC.con!rst.FieldValTrim!ATTR_6700)
+			Gui.Form1.dropdownlist1.AddItem(V.Local.sddlvalue)
+		F.ODBC.con!rst.MoveNext
+		F.Intrinsic.control.Loop
+		'make the form visible	
+		Gui.Form1..visible(true)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Elseif(V.Caller.Hook,=,48962)
+	'set the open global variable to 1
+	V.Global.Open.Set(1)
+	'set the invoice and gl account as local variables
+	V.Local.sinvoice.Set(V.Passed.000018)
+	V.Local.sglaccount.Set(V.Passed.000014)
+	'if the gl account number is between 6010.00.00 and 6010.99.00 load the form with the proper attributes in the dropdown list
+	F.Intrinsic.Control.If(V.local.sglaccount,>=,6010.00.00)
+	F.Intrinsic.Control.AndIf(V.Local.sglaccount,<=,6010.99.00)
+		'set the global attribute to 6010
+'		V.Global.Attribute.Set(6010)
+		F.Intrinsic.String.Build("select distinct ATTR_6010 from GCG_ATTR_MAINT_6550 where ATTR_6010 <> '{0}'","",V.Local.ssql)
+		F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.ssql)
+		F.Intrinsic.Control.DoUntil(V.ODBC.con!rst.EOF,=,True)
+			'set as a local variable and load the dropdown list
+			V.Local.sddlvalue.Set(V.ODBC.con!rst.FieldValTrim!ATTR_6010)
+			Gui.Form1.dropdownlist1.AddItem(V.Local.sddlvalue)
+		F.ODBC.con!rst.MoveNext
+		F.Intrinsic.control.Loop
+		'make the form visible
+		Gui.Form1..visible(true)
+	F.Intrinsic.Control.EndIf
+	'if the gl account number is between 6700.00.00 and 6700.99.00 load the form with the proper attributes in the dropdown list
+	F.Intrinsic.Control.If(V.Local.sglaccount,>=,6700.00.00)
+	F.Intrinsic.Control.AndIf(V.Local.sglaccount,<=,6700.00.99)
+		'set the global attribute to 6700
+'		V.Global.Attribute.Set(6700)
+		F.Intrinsic.String.Build("select distinct ATTR_6700 from GCG_ATTR_MAINT_6550 where ATTR_6700 <> '{0}'","",V.Local.ssql)
+		F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.ssql)
+		F.Intrinsic.Control.DoUntil(V.ODBC.con!rst.EOF,=,True)
+			'set as a local variable and load the dropdown list
+			V.Local.sddlvalue.Set(V.ODBC.con!rst.FieldValTrim!ATTR_6700)
+			Gui.Form1.dropdownlist1.AddItem(V.Local.sddlvalue)
+		F.ODBC.con!rst.MoveNext
+		F.Intrinsic.control.Loop
+		'make the form visible	
+		Gui.Form1..visible(true)
+	F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+
+program.sub.form1_unload.start
+F.Intrinsic.Control.SetErrorHandler("form1_unload_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'make the form invisible	
+Gui.Form1..Visible(false)
+
+'close connection to the database
+F.ODBC.Connection!con.Close
+
+'end the program
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("form1_unload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.end
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.form1_unload.end
+
+
+program.sub.cmdcancel_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdcancel_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+F.Intrinsic.Control.CallSub(Form1_unload)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdcancel_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdcancel_click.end
+
+
+program.sub.cmdselect_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdselect_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sattribute.Declare(String)
+V.Local.sbatch.Declare(String)
+V.Local.svendor.Declare(String)
+V.Local.svendorname.Declare(String)
+V.Local.sinvoice.Declare(String)
+V.Local.saccountnumber.Declare(String)
+
+V.Local.ssql.Declare(String)
+V.Local.stransactiondate.Declare(String)
+V.Local.supdatessql.Declare(String)
+V.Local.insertssql.Declare(String)
+V.Local.ssql2.Declare(String)
+V.Local.ssql3.Declare(String)
+V.Local.sbatchline.Declare(String)
+V.Local.stdate.Declare(String)
+V.Local.ibatchline.Declare(Long)
+
+'see if the open global variable is set to 1 if so call the open subroutine
+F.Intrinsic.Control.If(V.Global.Open,=,1)
+	F.Intrinsic.Control.CallSub(Open)
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+'set the local variables
+V.Local.sbatch.Set(V.Passed.000007.Trim)
+V.Local.svendor.Set(V.Passed.000002.Trim)
+V.Local.svendorname.Set(V.Passed.000013.Trim)
+V.Local.sinvoice.Set(V.Passed.000018.trim)
+
+'set the account number equal to what the user typed in on the screen
+V.Local.saccountnumber.Set(V.Screen.Form1!txtbudgetaccount.Text)
+'set the attribute equal to what the user selected from the drop down list
+V.Local.sattribute.Set(V.Screen.Form1!dropdownlist1.Text)
+
+'check to make sure the user selected something in the attribute drop down list
+F.Intrinsic.Control.If(V.screen.Form1!dropdownlist1.Text,=,"")
+	F.Intrinsic.UI.Msgbox("Please Select an Attribute")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+'see if there is anything in the GCG_3518_ATTR_ENTRY table already has information for that particular batch number
+F.Intrinsic.String.Build("Select * from GCG_3518_ATTR_ENTRY where BATCH_NUMBER = '{0}' and INVOICE = '{1}' and  VENDOR_NUMBER = '{2}'",V.Local.sbatch,V.local.sinvoice,V.local.svendor,V.Local.ssql)
+F.ODBC.Connection!con.OpenRecordsetRw("rst",V.local.ssql)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+	'if there is add a new record anyway
+	F.ODBC.con!rst.AddNew
+	F.ODBC.con!rst.Set!BATCH_NUMBER(V.Local.sbatch)
+	F.ODBC.con!rst.Set!VENDOR_NUMBER(V.Local.svendor)
+	F.ODBC.con!rst.Set!VENDOR_NAME(V.Local.svendorname)
+	F.ODBC.con!rst.Set!INVOICE(V.Local.sinvoice)
+	F.ODBC.con!rst.Set!ATTRIBUTE(V.Local.sattribute)
+	F.ODBC.con!rst.Set!ACCOUNT(V.Local.saccountnumber)
+	'get the top batch line from GL_Detail
+	F.Intrinsic.string.Build("select TOP 1 BATCH_LINE, T_DATE from GL_DETAIL where GL_ACCOUNT = '{0}' and BATCH_NUM = '{1}' and VENDOR = '{2}' and INVOICE_NO = '{3}' GROUP BY T_DATE, BATCH_LINE order by BATCH_LINE DESC",V.local.saccountnumber,V.Local.sbatch,V.Local.svendor,V.Local.sinvoice,V.Local.ssql2)
+	F.ODBC.Connection!con.OpenRecordsetRW("rstDate",V.Local.ssql2)
+	F.Intrinsic.Control.If(V.ODBC.con!rstDate.EOF,=,False)
+		F.ODBC.con!rst.Set!TRANS_DATE(V.ODBC.con!rstDate.fieldvaltrim!T_DATE)
+		'if there is a batch line convert it and add one then convert it back to a string
+		V.Local.sbatchline.Set(V.ODBC.con!rstDate.FieldValTrim!BATCH_LINE)
+		F.intrinsic.math.ConvertToLong(V.local.sbatchline,V.Local.ibatchline)
+		F.Intrinsic.math.Add(V.Local.ibatchline,1,V.local.ibatchline)
+		F.Intrinsic.string.converttostring(V.Local.ibatchline,V.Local.sbatchline)
+		F.Intrinsic.String.LPAD(V.Local.sbatchline,"0",5,V.Local.sbatchline)
+		F.ODBC.con!rst.Set!BATCH_LINE(V.local.sbatchline)
+	F.Intrinsic.Control.Else
+		'if there wasn't anything in GL_DETAIL check GCG_ATTRY_ENTRY_6550
+		F.Intrinsic.String.Build("select TOP 1 BATCH_LINE from GCG_3518_ATTR_ENTRY where BATCH_NUMBER = '{0}' order by BATCH_LINE DESC",V.Local.sbatch,V.Local.ssql3)
+		F.ODBC.Connection!con.OpenRecordsetRW("rstDate2",V.Local.ssql3)
+		'if there is a batch line convert it, add one and convert it back
+		F.Intrinsic.Control.If(V.ODBC.con!rstDate2.EOF,=,False)
+			V.Local.sbatchline.Set(V.ODBC.con!rstDate2.FieldValTrim!BATCH_LINE)
+			F.intrinsic.math.ConvertToLong(V.local.sbatchline,V.Local.ibatchline)
+			F.Intrinsic.math.Add(V.Local.ibatchline,1,V.local.ibatchline)
+			F.Intrinsic.string.converttostring(V.Local.ibatchline,V.Local.sbatchline)
+			F.Intrinsic.String.LPAD(V.Local.sbatchline,"0",5,V.Local.sbatchline)
+			F.ODBC.con!rst.Set!BATCH_LINE(V.local.sbatchline)
+			'set the transaction date as the ambient date
+			V.Local.stdate.Set(V.Ambient.Date)
+			F.Intrinsic.String.Format(V.Local.stdate,"YYYYDDMM",V.Local.stdate)
+			F.ODBC.con!rst.Set!TRANS_DATE(V.Local.stdate)
+		F.Intrinsic.Control.Else
+			'otherwise set the batch_line as 00001
+			F.ODBC.con!rst.Set!BATCH_LINE("00001")
+			V.Local.stdate.Set(V.Ambient.Date)
+			F.Intrinsic.String.Format(V.Local.stdate,"YYYYDDMM",V.Local.stdate)
+			F.ODBC.con!rst.Set!TRANS_DATE(V.Local.stdate)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstDate.Close
+	F.ODBC.con!rstDate2.Close
+	'update the custom table
+	F.ODBC.con!rst.Update
+
+'if there was nothing found add a new record
+F.Intrinsic.Control.Else
+	'otherwise add it to the recordset
+	F.ODBC.con!rst.AddNew
+	F.ODBC.con!rst.Set!BATCH_NUMBER(V.Local.sbatch)
+	F.ODBC.con!rst.Set!VENDOR_NUMBER(V.Local.svendor)
+	F.ODBC.con!rst.Set!VENDOR_NAME(V.Local.svendorname)
+	F.ODBC.con!rst.Set!INVOICE(V.Local.sinvoice)
+	F.ODBC.con!rst.Set!ATTRIBUTE(V.Local.sattribute)
+	F.ODBC.con!rst.Set!ACCOUNT(V.Local.saccountnumber)
+	'get the top batch line from GL_Detail
+	F.Intrinsic.string.Build("select TOP 1 T_DATE, BATCH_LINE from GL_DETAIL where GL_ACCOUNT = '{0}' and BATCH_NUM = '{1}' and VENDOR = '{2}' and INVOICE_NO = '{3}' GROUP BY T_DATE, BATCH_LINE order by BATCH_LINE DESC",V.local.saccountnumber,V.Local.sbatch,V.Local.svendor,V.Local.sinvoice,V.Local.ssql2)
+	F.ODBC.Connection!con.OpenRecordsetRW("rstDate",V.Local.ssql2)
+	F.Intrinsic.Control.If(V.ODBC.con!rstDate.EOF,=,False)
+		F.ODBC.con!rst.Set!TRANS_DATE(V.ODBC.con!rstDate.fieldvaltrim!T_DATE)
+		'if there is a batch line convert it, add one and convert it back
+		V.Local.sbatchline.Set(V.ODBC.con!rstDate.FieldValTrim!BATCH_LINE)
+		F.intrinsic.math.ConvertToLong(V.local.sbatchline,V.Local.ibatchline)
+		F.Intrinsic.math.Add(V.Local.ibatchline,1,V.local.ibatchline)
+		F.Intrinsic.string.converttostring(V.Local.ibatchline,V.Local.sbatchline)
+		F.Intrinsic.String.LPAD(V.Local.sbatchline,"0",5,V.Local.sbatchline)
+		F.ODBC.con!rst.Set!BATCH_LINE(V.local.sbatchline)
+
+'		F.ODBC.con!rst.Set!BATCH_LINE(V.ODBC.con!rstDate.FieldValTrim!BATCH_LINE)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("select TOP 1 BATCH_LINE  from GCG_3518_ATTR_ENTRY where BATCH_NUMBER = '{0}' order by BATCH_LINE DESC",V.Local.sbatch,V.Local.ssql3)
+		F.ODBC.Connection!con.OpenRecordsetRW("rstDate2",V.Local.ssql3)
+		F.Intrinsic.Control.If(V.ODBC.con!rstDate2.EOF,=,False)
+			'get the batch line format it, add 1, reformat and get ambinent date for transaction date
+			V.Local.sbatchline.Set(V.ODBC.con!rstDate2.FieldValTrim!BATCH_LINE)
+			F.intrinsic.math.ConvertToLong(V.local.sbatchline,V.Local.ibatchline)
+			F.Intrinsic.math.Add(V.Local.ibatchline,1,V.local.ibatchline)
+			F.Intrinsic.string.converttostring(V.Local.ibatchline,V.Local.sbatchline)
+			F.Intrinsic.String.LPAD(V.Local.sbatchline,"0",5,V.Local.sbatchline)
+			F.ODBC.con!rst.Set!BATCH_LINE(V.local.sbatchline)
+			V.Local.stdate.Set(V.Ambient.Date)
+			F.Intrinsic.String.Format(V.Local.stdate,"YYYYDDMM",V.Local.stdate)
+			F.ODBC.con!rst.Set!TRANS_DATE(V.Local.stdate)
+		F.Intrinsic.Control.Else
+			'otherwise set the batch line as 000001 and get the ambient date for the trans date
+			F.ODBC.con!rst.Set!BATCH_LINE("00001")
+			V.Local.stdate.Set(V.Ambient.Date)
+			F.Intrinsic.String.Format(V.Local.stdate,"YYYYDDMM",V.Local.stdate)
+			F.ODBC.con!rst.Set!TRANS_DATE(V.Local.stdate)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstDate.Close
+	F.ODBC.con!rstDate2.Close
+	F.ODBC.con!rst.Update
+F.Intrinsic.Control.EndIf
+
+'close connection
+F.ODBC.con!rst.Close
+
+'Because the standard system gives 2 batch lines every time a batch number is saved, the program will have to repeat the previous steps
+
+'see if there is anything in the GCG_3518_ATTR_ENTRY table already has information for that particular batch number
+F.Intrinsic.String.Build("Select * from GCG_3518_ATTR_ENTRY where BATCH_NUMBER = '{0}' and INVOICE = '{1}' and  VENDOR_NUMBER = '{2}'",V.Local.sbatch,V.local.sinvoice,V.local.svendor,V.Local.ssql)
+F.ODBC.Connection!con.OpenRecordsetRw("rst",V.local.ssql)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+	' add it to the recordset
+	F.ODBC.con!rst.AddNew
+	F.ODBC.con!rst.Set!BATCH_NUMBER(V.Local.sbatch)
+	F.ODBC.con!rst.Set!VENDOR_NUMBER(V.Local.svendor)
+	F.ODBC.con!rst.Set!VENDOR_NAME(V.Local.svendorname)
+	F.ODBC.con!rst.Set!INVOICE(V.Local.sinvoice)
+	F.ODBC.con!rst.Set!ATTRIBUTE(V.Local.sattribute)
+	F.ODBC.con!rst.Set!ACCOUNT(V.Local.saccountnumber)
+
+	F.Intrinsic.string.Build("select TOP 1 T_DATE, BATCH_LINE from GL_DETAIL where GL_ACCOUNT = '{0}' and BATCH_NUM = '{1}' and VENDOR = '{2}' and INVOICE_NO = '{3}' GROUP BY T_DATE, BATCH_LINE order by BATCH_LINE DESC",V.local.saccountnumber,V.Local.sbatch,V.Local.svendor,V.Local.sinvoice,V.Local.ssql2)
+	F.ODBC.Connection!con.OpenRecordsetRW("rstDate",V.Local.ssql2)
+	F.Intrinsic.Control.If(V.ODBC.con!rstDate.EOF,=,False)
+		F.ODBC.con!rst.Set!TRANS_DATE(V.ODBC.con!rstDate.fieldvaltrim!T_DATE)
+
+		V.Local.sbatchline.Set(V.ODBC.con!rstDate.FieldValTrim!BATCH_LINE)
+		F.intrinsic.math.ConvertToLong(V.local.sbatchline,V.Local.ibatchline)
+		F.Intrinsic.math.Add(V.Local.ibatchline,1,V.local.ibatchline)
+		F.Intrinsic.string.converttostring(V.Local.ibatchline,V.Local.sbatchline)
+		F.Intrinsic.String.LPAD(V.Local.sbatchline,"0",5,V.Local.sbatchline)
+		F.ODBC.con!rst.Set!BATCH_LINE(V.local.sbatchline)
+
+'		F.ODBC.con!rst.Set!BATCH_LINE(V.ODBC.con!rstDate.FieldValTrim!BATCH_LINE)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("select TOP 1 BATCH_LINE  from GCG_3518_ATTR_ENTRY where BATCH_NUMBER = '{0}'  order by BATCH_LINE DESC",V.Local.sbatch,V.Local.ssql3)
+		F.ODBC.Connection!con.OpenRecordsetRW("rstDate2",V.Local.ssql3)
+		F.Intrinsic.Control.If(V.ODBC.con!rstDate2.EOF,=,False)
+			V.Local.sbatchline.Set(V.ODBC.con!rstDate2.FieldValTrim!BATCH_LINE)
+			F.intrinsic.math.ConvertToLong(V.local.sbatchline,V.Local.ibatchline)
+			F.Intrinsic.math.Add(V.Local.ibatchline,1,V.local.ibatchline)
+			F.Intrinsic.string.converttostring(V.Local.ibatchline,V.Local.sbatchline)
+			F.Intrinsic.String.LPAD(V.Local.sbatchline,"0",5,V.Local.sbatchline)
+			F.ODBC.con!rst.Set!BATCH_LINE(V.local.sbatchline)
+			V.Local.stdate.Set(V.Ambient.Date)
+			F.Intrinsic.String.Format(V.Local.stdate,"YYYYDDMM",V.Local.stdate)
+			F.ODBC.con!rst.Set!TRANS_DATE(V.Local.stdate)
+		F.Intrinsic.Control.Else
+			F.ODBC.con!rst.Set!BATCH_LINE("00001")
+			V.Local.stdate.Set(V.Ambient.Date)
+			F.Intrinsic.String.Format(V.Local.stdate,"YYYYDDMM",V.Local.stdate)
+			F.ODBC.con!rst.Set!TRANS_DATE(V.Local.stdate)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstDate.Close
+	F.ODBC.con!rstDate2.Close
+	
+	F.ODBC.con!rst.Update
+F.Intrinsic.Control.EndIf
+
+'close connection
+F.ODBC.con!rst.Close
+'
+'close the form
+Gui.Form1..Visible(false)
+
+F.Intrinsic.Control.CallSub(Form1_unload)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdselect_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdselect_click.end
+
+
+Program.Sub.Open.Start
+F.Intrinsic.Control.SetErrorHandler("Open_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.ssql.Declare(String)
+V.Local.sinvoice.Declare(String)
+V.Local.sglaccount.Declare(String)
+V.Local.i.Declare(Long)
+V.Local.sddlvalue.Declare(String)
+V.Local.ssql2.Declare(String)
+V.Local.sattribute.Declare(String)
+V.Local.sbatch.Declare(String)
+V.Local.svendor.Declare(String)
+V.Local.svendorname.Declare(String)
+V.Local.saccountnumber.Declare(String)
+V.Local.stransdate.Declare(String)
+V.Local.sbatchline.Declare(String)
+V.Local.ssql3.Declare(String)
+
+'set the local variables	
+V.Local.sbatch.Set(V.Passed.000004.Trim)
+V.Local.svendor.Set(V.Passed.000011.Trim)
+V.Local.saccountnumber.Set(V.Passed.000014.Trim)
+V.Local.sinvoice.Set(V.Passed.000019.Trim)
+V.Local.sbatchline.Set(V.Passed.000093.Trim)
+V.Local.svendorname.Set(V.Passed.000016.Trim)
+
+F.Intrinsic.String.LPAD(V.Local.sbatchline,"0",5,V.Local.sbatchline)
+
+'if te program is running from open batch entry and the user clicks save see if that particular batch, line, invoice and vendor are already in the custom table if so update it if not enter it
+F.Intrinsic.String.Build("Select	* from GCG_3518_ATTR_ENTRY where BATCH_NUMBER = '{0}' and VENDOR_NUMBER = '{1}' and INVOICE = '{2}'  and BATCH_LINE = '{3}'",V.Local.sbatch,V.Local.svendor,V.Local.sinvoice,V.local.sbatchline,V.Local.ssql)
+F.ODBC.Connection!con.OpenLocalRecordsetRW("rst",V.Local.ssql)
+F.Intrinsic.Control.if(V.ODBC.con!rst.EOF,<>,True)
+	F.ODBC.con!rst.Set!BATCH_NUMBER(V.Local.sbatch)
+	F.ODBC.con!rst.Set!VENDOR_NUMBER(V.Local.svendor)
+	F.ODBC.con!rst.Set!VENDOR_NAME(V.Local.svendorname)
+	F.ODBC.con!rst.Set!INVOICE(V.Local.sinvoice)
+	F.ODBC.con!rst.Set!ATTRIBUTE(V.Local.sattribute)
+'	F.ODBC.con!rst.Set!ACCOUNT(V.Local.saccountnumber)
+	F.ODBC.con!rst.Set!BATCH_LINE(V.Local.sbatchline)
+	F.ODBC.con!rst.Set!ATTRIBUTE(V.Screen.Form1!dropdownlist1.Text)
+	F.ODBC.con!rst.Set!ACCOUNT(V.Screen.Form1!txtbudgetaccount.Text)
+	F.ODBC.con!rst.Update
+F.Intrinsic.Control.Else
+	'otherwise add it to the recordset
+	F.ODBC.con!rst.AddNew
+	F.ODBC.con!rst.Set!BATCH_NUMBER(V.Local.sbatch)
+	F.ODBC.con!rst.Set!VENDOR_NUMBER(V.Local.svendor)
+	F.ODBC.con!rst.Set!VENDOR_NAME(V.Local.svendorname)
+	F.ODBC.con!rst.Set!INVOICE(V.Local.sinvoice)
+	F.ODBC.con!rst.Set!ATTRIBUTE(V.Local.sattribute)
+'	F.ODBC.con!rst.Set!ACCOUNT(V.Local.saccountnumber)
+	F.ODBC.con!rst.Set!BATCH_LINE(V.Local.sbatchline)
+	F.ODBC.con!rst.Set!ATTRIBUTE(V.Screen.Form1!dropdownlist1.Text)
+	F.ODBC.con!rst.Set!ACCOUNT(V.Screen.Form1!txtbudgetaccount.Text)
+
+	F.ODBC.con!rst.Update
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.CallSub(Form1_unload)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Open_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3518_Custom_Attr.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Open.End
+
+
+Program.Sub.Comments.Start
+${$0$}$GCG_Custom_Attr_6550$}$WAW$}$10/8/2015
+Program.Sub.Comments.End
+
